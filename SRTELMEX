@@ -174,9 +174,8 @@
         // Datos simulados (títulos de películas para buscar en TMDb)
         const data = {
             movies: [
-                { title: 'Plankton: La película', image: '', link: 'http://192.168.1.69:8181/v2/fileManage/ShareMultimediaPlay?share_link=CmZtk%2BnPIx5ZUvtu6zeXYe%2F2s3o2AUqaw9nu2A%2FLGBAxYqQ%3D&path=%2Fhome%2FSKINHEAD%2F%E2%9A%A1%EF%B8%8F2025%2FPlankton%20La%20pel%C3%ADcula%20(2025)%2FPlankton%20La%20pel%C3%ADcula%20(2025).mp4&pwd=' },
-                { title: 'Mickey 17', image: '', link: 'https://13nt2qnqm72d.acek-cdn.com/hls2/01/04059/lho5vx7a8gqb_,l,n,.urlset/master.m3u8?t=cxnYiDgY6clDsii-mF1jBiLSA9JQhBqZr8VnroYQfgg&s=1741553570&e=129600&f=20299815&srv=pmjx9cjae94d&i=0.4&sp=500&p1=pmjx9cjae94d&p2=pmjx9cjae94d&asn=8151' },
-                { title: 'Contraataque', image: '', link: 'https://hgc0uswxhnn8.acek-cdn.com/hls2/01/03963/fr1ryy4sr359_,l,n,.urlset/master.m3u8?t=Ahg2ft_FZSLA8pOQ5sDwPEbKeWh13Fn7mGft6QOFFXA&s=1741553618&e=129600&f=19829130&srv=pgnp5flcy8ev&i=0.4&sp=500&p1=pgnp5flcy8ev&p2=pgnp5flcy8ev&asn=8151' },
+                { title: 'Plankton: La película', image: '', link: 'hhttp://192.168.1.69:8181/tos/#/share?share_link=CmZtk%2BnPIx5ZUvtu6zeXYe%2F2s3o2AUqaw9nu2A%2FLGBAxYqQ%3D' },
+                { title: 'Plankton: La película', image: '', link: 'https://sManpeW5.tnas.link/tos/#/share?share_link=CmZtk%2BnPIx5ZUvtu6zeXYe%2F2s3o2AUqaw9nu2A%2FLGBAxYqQ%3D' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' }
             ],

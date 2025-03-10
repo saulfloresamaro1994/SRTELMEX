@@ -56,7 +56,7 @@
     </div>
 
     <div id="movie-list">
-        <div class="movie-item" data-src="https://SKINHEAD.tnas.link/tos/#/share?share_link=O%2F9BKIwc9zCngtwxYg32YJimR4J5WW6lOLyV%2BM9qSXeYV5c%3D">Película 1</div>
+        <div class="movie-item" data-src="https://SKINHEAD.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D">Película 1</div>
         <div class="movie-item" data-src="URL_DE_LA_PELICULA_2">Película 2</div>
         <div class="movie-item" data-src="URL_DE_LA_PELICULA_3">Película 3</div>
         <!-- Agrega más películas según sea necesario -->

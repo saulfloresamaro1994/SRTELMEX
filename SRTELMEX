@@ -3,31 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor de Video Universal</title>
-    <!-- Incluir Video.js CSS -->
-    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet" />
+    <title>Video de Terra Máster</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: black;
+        }
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
-    <h1>Reproductor de Video Universal</h1>
-    <!-- Reproductor de Video -->
-    <video
-        id="my-video"
-        class="video-js"
-        controls
-        preload="auto"
-        width="640"
-        height="360"
-        data-setup="{}"
-    >
-        <!-- Fuente del video -->
-        <source src="https://SKINHEAD.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D" />
-        <p class="vjs-no-js">
-            Para ver este video, habilita JavaScript o considera actualizar a un navegador que
-            <a href="https://videojs.com/html5-video-support/" target="_blank">soporte video HTML5</a>.
-        </p>
+    <video controls autoplay>
+        <source src="https://SKINHEAD.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D" type="video/mp4">
+        Tu navegador no soporta la etiqueta de video.
     </video>
-
-    <!-- Incluir Video.js JS -->
-    <script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
 </body>
 </html>

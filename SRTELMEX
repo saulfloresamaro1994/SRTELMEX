@@ -3,79 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor de Video Remoto</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-        }
-        #video-container {
-            width: 80%;
-            max-width: 800px;
-            background-color: #000;
-            margin-top: 20px;
-        }
-        #video-player {
-            width: 100%;
-            height: auto;
-        }
-        #movie-list {
-            width: 80%;
-            max-width: 800px;
-            margin-top: 20px;
-            background-color: #fff;
-            padding: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .movie-item {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            cursor: pointer;
-        }
-        .movie-item:last-child {
-            border-bottom: none;
-        }
-        .movie-item:hover {
-            background-color: #f9f9f9;
-        }
-    </style>
+    <title>Reproductor de Video Universal</title>
+    <!-- Incluir Video.js CSS -->
+    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet" />
 </head>
 <body>
+    <h1>Reproductor de Video Universal</h1>
+    <!-- Reproductor de Video -->
+    <video
+        id="my-video"
+        class="video-js"
+        controls
+        preload="auto"
+        width="640"
+        height="360"
+        data-setup="{}"
+    >
+        <!-- Fuente del video -->
+        <source src="https://SKINHEAD.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D" type="application/x-mpegURL" />
+        <p class="vjs-no-js">
+            Para ver este video, habilita JavaScript o considera actualizar a un navegador que
+            <a href="https://videojs.com/html5-video-support/" target="_blank">soporte video HTML5</a>.
+        </p>
+    </video>
 
-    <div id="video-container">
-        <video id="video-player" controls>
-            <source src="" type="video/mp4">
-            Tu navegador no soporta la reproducción de video.
-        </video>
-    </div>
-
-    <div id="movie-list">
-        <div class="movie-item" data-src="https://skinhead.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D">Película 1</div>
-        <div class="movie-item" data-src="http://192.168.1.69:8181/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D">Película 2</div>
-        <div class="movie-item" data-src="URL_DE_LA_PELICULA_3">Película 3</div>
-        <!-- Agrega más películas según sea necesario -->
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const videoPlayer = document.getElementById('video-player');
-            const movieItems = document.querySelectorAll('.movie-item');
-
-            movieItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const videoSrc = this.getAttribute('data-src');
-                    videoPlayer.setAttribute('src', videoSrc);
-                    videoPlayer.play();
-                });
-            });
-        });
-    </script>
-
+    <!-- Incluir Video.js JS -->
+    <script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
 </body>
 </html>

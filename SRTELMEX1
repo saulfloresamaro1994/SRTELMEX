@@ -240,25 +240,6 @@
             videoElement.src = '';
         });
 
-        // Función para eliminar contenido en una fecha y hora específica
-        function scheduleContentRemoval(dateTime) {
-            const now = new Date();
-            const targetDate = new Date(dateTime);
-
-            if (targetDate > now) {
-                const timeUntilRemoval = targetDate - now;
-                setTimeout(() => {
-                    content.innerHTML = ''; // Elimina todo el contenido
-                    console.log('Contenido eliminado en la fecha y hora especificada.');
-                }, timeUntilRemoval);
-            } else {
-                console.error('La fecha y hora de eliminación deben ser futuras.');
-            }
-        }
-
-        // Programar eliminación de contenido para el 10 de marzo de 2025 a las 10:45 AM
-        scheduleContentRemoval('2025-03-12T12:00:00');
-
         // Cargar contenido inicial
         loadContent('movies');
 

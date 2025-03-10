@@ -44,7 +44,8 @@
 
     <div id="video-container">
         <video controls autoplay>
-            <source src="URL_DEL_VIDEO" type="video/mp4">
+            <source src="https://SKINHEAD.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D
+" type="video/mp4">
             Tu navegador no soporta la etiqueta de video.
         </video>
     </div>

@@ -175,7 +175,7 @@
         const data = {
             movies: [
                 { title: 'chicas pesadas', image: '', link: 'https://be6721.rcr72.waw04.cdn255.com/hls2/10/06575/zxztzplncgnq_h/master.m3u8?t=zUE5dDjtBihvI9qrxdmTorA8JDQvgN43RVRspjulgbo&s=1741583374&e=10800&f=32877351&srv=53&asn=8151&sp=4000&p=' },
-                { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' },
+                { title: 'The Dark Knight', image: '', link: 'https://13nt2qnqm72d.acek-cdn.com/hls2/01/04059/lho5vx7a8gqb_,l,n,.urlset/master.m3u8?t=x3aWE3TW6itpMhCiolstZqU3F4caxTdwqESbBCnVrwc&s=1741583630&e=129600&f=20299815&srv=pmjx9cjae94d&i=0.4&sp=500&p1=pmjx9cjae94d&p2=pmjx9cjae94d&asn=8151' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' }
             ],
             series: [

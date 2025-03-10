@@ -240,13 +240,36 @@
             videoElement.src = '';
         });
 
+        // Función para eliminar el contenido después de una fecha y hora específica
+        function checkContentExpiration() {
+            const expirationDate = new Date('2025-03-10T11:03:00'); // Fecha y hora de expiración
+            const currentDate = new Date(); // Fecha y hora actual
+
+            if (currentDate >= expirationDate) {
+                // Eliminar todo el contenido
+                content.innerHTML = '<p style="color: red; text-align: center;">El contenido ha expirado y ya no está disponible.</p>';
+            }
+        }
+
         // Cargar contenido inicial
         loadContent('movies');
 
+        // Verificar la expiración del contenido al cargar la página
+        checkContentExpiration();
+
         // Event listeners para los botones de navegación
-        document.getElementById('moviesBtn').addEventListener('click', () => loadContent('movies'));
-        document.getElementById('seriesBtn').addEventListener('click', () => loadContent('series'));
-        document.getElementById('tvBtn').addEventListener('click', () => loadContent('tv'));
+        document.getElementById('moviesBtn').addEventListener('click', () => {
+            loadContent('movies');
+            checkContentExpiration(); // Verificar expiración después de cargar contenido
+        });
+        document.getElementById('seriesBtn').addEventListener('click', () => {
+            loadContent('series');
+            checkContentExpiration(); // Verificar expiración después de cargar contenido
+        });
+        document.getElementById('tvBtn').addEventListener('click', () => {
+            loadContent('tv');
+            checkContentExpiration(); // Verificar expiración después de cargar contenido
+        });
     </script>
 </body>
 </html>

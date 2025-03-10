@@ -189,7 +189,11 @@
         const closePlayerBtn = document.getElementById('closePlayer');
         const castButton = document.getElementById('castButton');
 
-        // Datos simulados (títulos de películas, series y TV)
+        // Token de autenticación de TMDb
+        const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMjI0MThkZjc2NTE4NmUyMjA4Y2Y0NGJlZjllM2JkMiIsIm5iZiI6MTcxMTEyMzY3OS44NjYsInN1YiI6IjY1ZmRhY2RmMzc4MDYyMDE3YzM4MTY1NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AlxLhYCCZdwKxX1G0i2OyAko3hb3WvXQx8SeP8Yki-A';
+        const API_URL = 'https://api.themoviedb.org/3';
+
+        // Datos simulados (títulos de películas para buscar en TMDb)
         const data = {
             movies: [
                 { title: 'Capitán América: Brave New World', image: '', link: 'http://tv.proyectox.vip:8080/movie/lopjorgetv2/B2HcOqCMW0/109060.mkv' },
@@ -209,22 +213,104 @@
             ]
         };
 
-        // Función para cargar contenido
-        function loadContent(type) {
+        // Inicializar Chromecast
+        function initializeCastApi() {
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+            });
+        }
+
+        // Transmitir a Chromecast
+        function castVideo() {
+            const castSession = cast.framework.CastContext.getInstance().getCurrentSession();
+            if (castSession) {
+                const mediaInfo = new chrome.cast.media.MediaInfo(videoElement.src, 'video/mp4');
+                const request = new chrome.cast.media.LoadRequest(mediaInfo);
+                castSession.loadMedia(request).then(
+                    () => console.log('Transmisión iniciada'),
+                    (error) => console.error('Error al transmitir:', error)
+                );
+            }
+        }
+
+        // Configurar el botón de Chromecast
+        castButton.addEventListener('click', castVideo);
+
+        // Inicializar la API de Chromecast cuando esté lista
+        window['__onGCastApiAvailable'] = (isAvailable) => {
+            if (isAvailable) {
+                initializeCastApi();
+            }
+        };
+
+        // Resto del código (igual que antes)
+        document.getElementById('moviesBtn').addEventListener('click', () => loadContent('movies'));
+        document.getElementById('seriesBtn').addEventListener('click', () => loadContent('series'));
+        document.getElementById('tvBtn').addEventListener('click', () => loadContent('tv'));
+
+        async function loadContent(type) {
             content.innerHTML = '';
-            data[type].forEach(item => {
+            for (const item of data[type]) {
                 const itemElement = document.createElement('div');
                 itemElement.classList.add('content-item');
+
+                const tmdbData = await searchTmdb(item.title);
+                if (tmdbData) {
+                    item.image = `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}`;
+                    item.title = tmdbData.title || tmdbData.name;
+                }
+
                 itemElement.innerHTML = `
-                    <img src="${item.image}" alt="${item.title}">
+                    <img src="${item.image}" alt="${item.title}" onload="scanCover('${item.image}', this)">
                     <h3>${item.title}</h3>
                     <button onclick="playVideo('${item.link}')">Reproducir</button>
                 `;
                 content.appendChild(itemElement);
-            });
+            }
         }
 
-        // Función para reproducir video
+        async function searchTmdb(query) {
+            try {
+                const response = await fetch(`${API_URL}/search/movie?query=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    return data.results[0];
+                }
+            } catch (error) {
+                console.error('Error al buscar en TMDb:', error);
+            }
+            return null;
+        }
+
+        async function scanCover(imageUrl, imgElement) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_TOKEN}`
+                    },
+                    body: JSON.stringify({ image: imageUrl })
+                });
+                const result = await response.json();
+                console.log('Información de la carátula:', result);
+
+                if (result.title) {
+                    const titleElement = imgElement.nextElementSibling;
+                    titleElement.textContent = result.title;
+                }
+            } catch (error) {
+                console.error('Error al escanear la carátula:', error);
+            }
+        }
+
         function playVideo(link) {
             videoElement.src = link;
             videoPlayer.style.display = 'block';
@@ -232,7 +318,6 @@
             videoElement.play();
         }
 
-        // Función para cerrar el reproductor
         closePlayerBtn.addEventListener('click', () => {
             videoPlayer.style.display = 'none';
             overlay.style.display = 'none';
@@ -240,36 +325,7 @@
             videoElement.src = '';
         });
 
-        // Función para eliminar el contenido después de una fecha y hora específica
-        function checkContentExpiration() {
-            const expirationDate = new Date('2025-03-10T11:03:00'); // Fecha y hora de expiración
-            const currentDate = new Date(); // Fecha y hora actual
-
-            if (currentDate >= expirationDate) {
-                // Eliminar todo el contenido
-                content.innerHTML = '<p style="color: red; text-align: center;">El contenido ha expirado y ya no está disponible.</p>';
-            }
-        }
-
-        // Cargar contenido inicial
         loadContent('movies');
-
-        // Verificar la expiración del contenido al cargar la página
-        checkContentExpiration();
-
-        // Event listeners para los botones de navegación
-        document.getElementById('moviesBtn').addEventListener('click', () => {
-            loadContent('movies');
-            checkContentExpiration(); // Verificar expiración después de cargar contenido
-        });
-        document.getElementById('seriesBtn').addEventListener('click', () => {
-            loadContent('series');
-            checkContentExpiration(); // Verificar expiración después de cargar contenido
-        });
-        document.getElementById('tvBtn').addEventListener('click', () => {
-            loadContent('tv');
-            checkContentExpiration(); // Verificar expiración después de cargar contenido
-        });
     </script>
 </body>
 </html>

@@ -3,284 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interfaz tipo Netflix con Reproductor</title>
+    <title>Reproductor de Video Remoto</title>
     <style>
-        /* Estilos CSS (igual que antes) */
         body {
             font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
             margin: 0;
             padding: 0;
-            background-color: #141414;
-            color: white;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        nav button {
-            background-color: #e50914;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin: 0 10px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        nav button:hover {
-            background-color: #f40612;
-        }
-
-        #content {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 20px;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
         }
-
-        .content-item {
-            width: 200px;
-            background-color: #333;
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-            text-align: center;
-            padding: 10px;
-        }
-
-        .content-item img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        .content-item h3 {
-            margin: 10px 0;
-            font-size: 16px;
-        }
-
-        .content-item button {
-            background-color: #e50914;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 14px;
-            border-radius: 5px;
-        }
-
-        .content-item button:hover {
-            background-color: #f40612;
-        }
-
-        /* Estilos del reproductor */
-        #videoPlayer {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        #video-container {
             width: 80%;
             max-width: 800px;
             background-color: #000;
-            z-index: 1000;
-            display: none;
+            margin-top: 20px;
         }
-
-        #videoPlayer video {
+        #video-player {
             width: 100%;
             height: auto;
         }
-
-        #closePlayer {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #e50914;
-            color: white;
-            border: none;
-            padding: 5px 10px;
+        #movie-list {
+            width: 80%;
+            max-width: 800px;
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .movie-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
             cursor: pointer;
-            font-size: 14px;
-            border-radius: 5px;
         }
-
-        #closePlayer:hover {
-            background-color: #f40612;
+        .movie-item:last-child {
+            border-bottom: none;
         }
-
-        /* Fondo oscuro detrás del reproductor */
-        #overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 999;
-            display: none;
+        .movie-item:hover {
+            background-color: #f9f9f9;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Encabezado con botones -->
-        <header>
-            <h1>SERVIDOR SKINHEAD</h1>
-            <nav>
-                <button id="moviesBtn">Películas</button>
-                <button id="seriesBtn">Series</button>
-                <button id="tvBtn">TV</button>
-            </nav>
-        </header>
 
-        <!-- Contenido dinámico -->
-        <main>
-            <div id="content">
-                <!-- Aquí se cargará el contenido dinámico -->
-            </div>
-        </main>
-    </div>
-
-    <!-- Reproductor de video -->
-    <div id="overlay"></div>
-    <div id="videoPlayer">
-        <video controls id="video">
+    <div id="video-container">
+        <video id="video-player" controls>
+            <source src="" type="video/mp4">
             Tu navegador no soporta la reproducción de video.
         </video>
-        <button id="closePlayer">Cerrar</button>
+    </div>
+
+    <div id="movie-list">
+        <div class="movie-item" data-src="https://SKINHEAD.tnas.link/tos/#/share?share_link=O%2F9BKIwc9zCngtwxYg32YJimR4J5WW6lOLyV%2BM9qSXeYV5c%3D">Película 1</div>
+        <div class="movie-item" data-src="URL_DE_LA_PELICULA_2">Película 2</div>
+        <div class="movie-item" data-src="URL_DE_LA_PELICULA_3">Película 3</div>
+        <!-- Agrega más películas según sea necesario -->
     </div>
 
     <script>
-        // Lógica en JavaScript
-        const content = document.getElementById('content');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const overlay = document.getElementById('overlay');
-        const videoElement = document.getElementById('video');
-        const closePlayerBtn = document.getElementById('closePlayer');
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoPlayer = document.getElementById('video-player');
+            const movieItems = document.querySelectorAll('.movie-item');
 
-        // Token de autenticación de TMDb
-        const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMjI0MThkZjc2NTE4NmUyMjA4Y2Y0NGJlZjllM2JkMiIsIm5iZiI6MTcxMTEyMzY3OS44NjYsInN1YiI6IjY1ZmRhY2RmMzc4MDYyMDE3YzM4MTY1NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AlxLhYCCZdwKxX1G0i2OyAko3hb3WvXQx8SeP8Yki-A';
-        const API_URL = 'https://api.themoviedb.org/3';
-
-        // Datos simulados (títulos de películas para buscar en TMDb)
-        const data = {
-            movies: [
-                { title: 'Plankton: La película', image: '', link: 'hhttp://192.168.1.69:8181/tos/#/share?share_link=CmZtk%2BnPIx5ZUvtu6zeXYe%2F2s3o2AUqaw9nu2A%2FLGBAxYqQ%3D' },
-                { title: 'Plankton: La película', image: '', link: 'https://sManpeW5.tnas.link/tos/#/share?share_link=CmZtk%2BnPIx5ZUvtu6zeXYe%2F2s3o2AUqaw9nu2A%2FLGBAxYqQ%3D' },
-                { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' },
-                { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' }
-            ],
-            series: [
-                { title: 'Breaking Bad', image: '', link: 'https://www.example.com/serie1.mp4' },
-                { title: 'Game of Thrones', image: '', link: 'https://www.example.com/serie2.mkv' },
-                { title: 'Stranger Things', image: '', link: 'https://www.example.com/serie3.m3u8' }
-            ],
-            tv: [
-                { title: 'The Office', image: '', link: 'https://www.example.com/tv1.mp4' },
-                { title: 'Friends', image: '', link: 'https://www.example.com/tv2.mkv' },
-                { title: 'The Mandalorian', image: '', link: 'https://www.example.com/tv3.m3u8' }
-            ]
-        };
-
-        // Cargar contenido según el tipo
-        document.getElementById('moviesBtn').addEventListener('click', () => loadContent('movies'));
-        document.getElementById('seriesBtn').addEventListener('click', () => loadContent('series'));
-        document.getElementById('tvBtn').addEventListener('click', () => loadContent('tv'));
-
-        // Función para cargar contenido
-        async function loadContent(type) {
-            content.innerHTML = ''; // Limpiar contenido anterior
-            for (const item of data[type]) {
-                const itemElement = document.createElement('div');
-                itemElement.classList.add('content-item');
-
-                // Buscar información de la película/serie en TMDb
-                const tmdbData = await searchTmdb(item.title);
-                if (tmdbData) {
-                    item.image = `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}`; // URL de la imagen
-                    item.title = tmdbData.title || tmdbData.name; // Título de la película/serie
-                }
-
-                itemElement.innerHTML = `
-                    <img src="${item.image}" alt="${item.title}" onload="scanCover('${item.image}', this)">
-                    <h3>${item.title}</h3>
-                    <button onclick="playVideo('${item.link}')">Reproducir</button>
-                `;
-                content.appendChild(itemElement);
-            }
-        }
-
-        // Buscar en TMDb
-        async function searchTmdb(query) {
-            try {
-                const response = await fetch(`${API_URL}/search/movie?query=${encodeURIComponent(query)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${API_TOKEN}`,
-                        'Content-Type': 'application/json'
-                    }
+            movieItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const videoSrc = this.getAttribute('data-src');
+                    videoPlayer.setAttribute('src', videoSrc);
+                    videoPlayer.play();
                 });
-                const data = await response.json();
-                if (data.results && data.results.length > 0) {
-                    return data.results[0]; // Devuelve el primer resultado
-                }
-            } catch (error) {
-                console.error('Error al buscar en TMDb:', error);
-            }
-            return null;
-        }
-
-        // Escanear carátula automáticamente
-        async function scanCover(imageUrl, imgElement) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_TOKEN}`
-                    },
-                    body: JSON.stringify({ image: imageUrl })
-                });
-                const result = await response.json();
-                console.log('Información de la carátula:', result);
-
-                // Actualizar el título con la información de la API (si es necesario)
-                if (result.title) {
-                    const titleElement = imgElement.nextElementSibling; // El <h3> que sigue a la imagen
-                    titleElement.textContent = result.title;
-                }
-            } catch (error) {
-                console.error('Error al escanear la carátula:', error);
-            }
-        }
-
-        // Reproducir video (igual que antes)
-        function playVideo(link) {
-            videoElement.src = link;
-            videoPlayer.style.display = 'block';
-            overlay.style.display = 'block';
-            videoElement.play();
-        }
-
-        // Cerrar reproductor (igual que antes)
-        closePlayerBtn.addEventListener('click', () => {
-            videoPlayer.style.display = 'none';
-            overlay.style.display = 'none';
-            videoElement.pause();
-            videoElement.src = '';
+            });
         });
-
-        // Cargar contenido inicial
-        loadContent('movies');
     </script>
+
 </body>
 </html>

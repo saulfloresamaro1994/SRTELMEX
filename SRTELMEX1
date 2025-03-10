@@ -128,6 +128,20 @@
             z-index: 999;
             display: none;
         }
+
+        /* Estilos para el mensaje de error */
+        #errorMessage {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #e50914;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1001;
+        }
     </style>
 </head>
 <body>
@@ -159,6 +173,9 @@
         <button id="closePlayer">Cerrar</button>
     </div>
 
+    <!-- Mensaje de error -->
+    <div id="errorMessage">El enlace no es válido. Solo se admiten enlaces de OneDrive.</div>
+
     <script>
         // Lógica en JavaScript
         const content = document.getElementById('content');
@@ -166,6 +183,7 @@
         const overlay = document.getElementById('overlay');
         const videoElement = document.getElementById('video');
         const closePlayerBtn = document.getElementById('closePlayer');
+        const errorMessage = document.getElementById('errorMessage');
 
         // Token de autenticación de TMDb
         const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMjI0MThkZjc2NTE4NmUyMjA4Y2Y0NGJlZjllM2JkMiIsIm5iZiI6MTcxMTEyMzY3OS44NjYsInN1YiI6IjY1ZmRhY2RmMzc4MDYyMDE3YzM4MTY1NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AlxLhYCCZdwKxX1G0i2OyAko3hb3WvXQx8SeP8Yki-A';
@@ -174,19 +192,19 @@
         // Datos simulados (títulos de películas para buscar en TMDb)
         const data = {
             movies: [
-                { title: 'Plankton: La película', image: '', link: 'https://goqp5vk8ekuqh.acek-cdn.com/hls2/01/04059/l0bdiu2naizg_l/master.m3u8?t=q9BnIKOBICLcVzJ9bfxcDbX36pszA0tvyAWhK3tSiwg&s=1741552684&e=129600&f=20299406&srv=yCdcGNsOcuCU&i=0.4&sp=500&p1=yCdcGNsOcuCU&p2=yCdcGNsOcuCU&asn=8151' },
-                { title: 'Mickey 17', image: '', link: 'https://13nt2qnqm72d.acek-cdn.com/hls2/01/04059/lho5vx7a8gqb_,l,n,.urlset/master.m3u8?t=cxnYiDgY6clDsii-mF1jBiLSA9JQhBqZr8VnroYQfgg&s=1741553570&e=129600&f=20299815&srv=pmjx9cjae94d&i=0.4&sp=500&p1=pmjx9cjae94d&p2=pmjx9cjae94d&asn=8151' },
-                { title: 'Contraataque', image: '', link: 'https://hgc0uswxhnn8.acek-cdn.com/hls2/01/03963/fr1ryy4sr359_,l,n,.urlset/master.m3u8?t=Ahg2ft_FZSLA8pOQ5sDwPEbKeWh13Fn7mGft6QOFFXA&s=1741553618&e=129600&f=19829130&srv=pgnp5flcy8ev&i=0.4&sp=500&p1=pgnp5flcy8ev&p2=pgnp5flcy8ev&asn=8151' },
+                { title: 'Plankton: La película', image: '', link: 'https://1drv.ms/v/s!Aq1234567890' },
+                { title: 'Mickey 17', image: '', link: 'https://1drv.ms/v/s!Bq1234567890' },
+                { title: 'Contraataque', image: '', link: 'https://1drv.ms/v/s!Cq1234567890' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' }
             ],
             series: [
-                { title: 'Breaking Bad', image: '', link: 'https://www.example.com/serie1.mp4' },
+                { title: 'Breaking Bad', image: '', link: 'https://1drv.ms/v/s!Dq1234567890' },
                 { title: 'Game of Thrones', image: '', link: 'https://www.example.com/serie2.mkv' },
                 { title: 'Stranger Things', image: '', link: 'https://www.example.com/serie3.m3u8' }
             ],
             tv: [
-                { title: 'The Office', image: '', link: 'https://www.example.com/tv1.mp4' },
+                { title: 'The Office', image: '', link: 'https://1drv.ms/v/s!Eq1234567890' },
                 { title: 'Friends', image: '', link: 'https://www.example.com/tv2.mkv' },
                 { title: 'The Mandalorian', image: '', link: 'https://www.example.com/tv3.m3u8' }
             ]
@@ -264,12 +282,25 @@
             }
         }
 
-        // Reproducir video (igual que antes)
+        // Función para validar enlaces de OneDrive
+        function isValidOneDriveLink(link) {
+            const oneDrivePattern = /^https:\/\/(onedrive\.live\.com\/|1drv\.ms\/)/;
+            return oneDrivePattern.test(link);
+        }
+
+        // Reproducir video solo si es un enlace de OneDrive
         function playVideo(link) {
-            videoElement.src = link;
-            videoPlayer.style.display = 'block';
-            overlay.style.display = 'block';
-            videoElement.play();
+            if (isValidOneDriveLink(link)) {
+                videoElement.src = link;
+                videoPlayer.style.display = 'block';
+                overlay.style.display = 'block';
+                videoElement.play();
+            } else {
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
         }
 
         // Cerrar reproductor (igual que antes)

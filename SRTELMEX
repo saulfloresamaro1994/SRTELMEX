@@ -174,7 +174,7 @@
         // Datos simulados (títulos de películas para buscar en TMDb)
         const data = {
             movies: [
-                { title: 'Capitán América: Brave New World', image: '', link: 'https://drive.google.com/file/d/1B_xJLGH4jROYuw7NcuxR1FjYmtxoohQR/view?usp=drive_link' },
+                { title: 'El reino del planeta de los simios', image: '', link: 'https://filemoon.to/d/cd8u1i43asda/El_planeta_de_los_simios_Nuevo_reino__2024_.mp4' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' }
             ],

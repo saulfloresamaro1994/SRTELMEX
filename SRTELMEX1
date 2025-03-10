@@ -128,20 +128,6 @@
             z-index: 999;
             display: none;
         }
-
-        /* Estilos para el mensaje de error */
-        #errorMessage {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #e50914;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: none;
-            z-index: 1001;
-        }
     </style>
 </head>
 <body>
@@ -173,9 +159,6 @@
         <button id="closePlayer">Cerrar</button>
     </div>
 
-    <!-- Mensaje de error -->
-    <div id="errorMessage">El enlace no es válido. Solo se admiten enlaces de OneDrive.</div>
-
     <script>
         // Lógica en JavaScript
         const content = document.getElementById('content');
@@ -183,7 +166,6 @@
         const overlay = document.getElementById('overlay');
         const videoElement = document.getElementById('video');
         const closePlayerBtn = document.getElementById('closePlayer');
-        const errorMessage = document.getElementById('errorMessage');
 
         // Token de autenticación de TMDb
         const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMjI0MThkZjc2NTE4NmUyMjA4Y2Y0NGJlZjllM2JkMiIsIm5iZiI6MTcxMTEyMzY3OS44NjYsInN1YiI6IjY1ZmRhY2RmMzc4MDYyMDE3YzM4MTY1NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AlxLhYCCZdwKxX1G0i2OyAko3hb3WvXQx8SeP8Yki-A';
@@ -192,19 +174,17 @@
         // Datos simulados (títulos de películas para buscar en TMDb)
         const data = {
             movies: [
-                { title: 'Plankton: La película', image: '', link: 'https://1drv.ms/v/s!Aq1234567890' },
-                { title: 'Mickey 17', image: '', link: 'https://1drv.ms/v/s!Bq1234567890' },
-                { title: 'Contraataque', image: '', link: 'https://1drv.ms/v/s!Cq1234567890' },
+                { title: 'The Dark Knight', image: '', link: 'http://tv.proyectox.vip:8080/movie/lopjorgetv2/B2HcOqCMW0/109060.mkv' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' },
                 { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' }
             ],
             series: [
-                { title: 'Breaking Bad', image: '', link: 'https://1drv.ms/v/s!Dq1234567890' },
+                { title: 'Breaking Bad', image: '', link: 'https://www.example.com/serie1.mp4' },
                 { title: 'Game of Thrones', image: '', link: 'https://www.example.com/serie2.mkv' },
                 { title: 'Stranger Things', image: '', link: 'https://www.example.com/serie3.m3u8' }
             ],
             tv: [
-                { title: 'The Office', image: '', link: 'https://1drv.ms/v/s!Eq1234567890' },
+                { title: 'The Office', image: '', link: 'https://www.example.com/tv1.mp4' },
                 { title: 'Friends', image: '', link: 'https://www.example.com/tv2.mkv' },
                 { title: 'The Mandalorian', image: '', link: 'https://www.example.com/tv3.m3u8' }
             ]
@@ -282,25 +262,12 @@
             }
         }
 
-        // Función para validar enlaces de OneDrive
-        function isValidOneDriveLink(link) {
-            const oneDrivePattern = /^https:\/\/(onedrive\.live\.com\/|1drv\.ms\/)/;
-            return oneDrivePattern.test(link);
-        }
-
-        // Reproducir video solo si es un enlace de OneDrive
+        // Reproducir video (igual que antes)
         function playVideo(link) {
-            if (isValidOneDriveLink(link)) {
-                videoElement.src = link;
-                videoPlayer.style.display = 'block';
-                overlay.style.display = 'block';
-                videoElement.play();
-            } else {
-                errorMessage.style.display = 'block';
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 3000);
-            }
+            videoElement.src = link;
+            videoPlayer.style.display = 'block';
+            overlay.style.display = 'block';
+            videoElement.play();
         }
 
         // Cerrar reproductor (igual que antes)

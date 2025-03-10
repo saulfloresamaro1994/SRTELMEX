@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video de Terra Máster</title>
+    <title>Reproductor de Video con Autenticación</title>
     <style>
         body, html {
             margin: 0;
@@ -11,20 +11,57 @@
             height: 100%;
             overflow: hidden;
             background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        #login {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #video-container {
+            display: none;
+            width: 100%;
+            height: 100%;
         }
         video {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
         }
     </style>
 </head>
 <body>
-    <video controls autoplay>
-        <source src="https://SKINHEAD.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D" type="video/mp4">
-        Tu navegador no soporta la etiqueta de video.
-    </video>
+    <div id="login">
+        <h2>Autenticación</h2>
+        <input type="text" id="username" placeholder="Usuario" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
+        <button onclick="login()">Acceder</button>
+        <p id="error-message" style="color: red; display: none;">Usuario o contraseña incorrectos</p>
+    </div>
+
+    <div id="video-container">
+        <video controls autoplay>
+            <source src="URL_DEL_VIDEO" type="video/mp4">
+            Tu navegador no soporta la etiqueta de video.
+        </video>
+    </div>
+
+    <script>
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Aquí puedes cambiar el usuario y contraseña
+            if (username === 'usuario' && password === 'contraseña') {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('video-container').style.display = 'block';
+            } else {
+                document.getElementById('error-message').style.display = 'block';
+            }
+        }
+    </script>
 </body>
 </html>

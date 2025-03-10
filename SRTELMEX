@@ -88,16 +88,20 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 800px;
+            width: 90%;
+            max-width: 1000px;
             background-color: #000;
             z-index: 1000;
             display: none;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
         #videoPlayer video {
             width: 100%;
             height: auto;
+            border-radius: 10px;
         }
 
         #closePlayer {
@@ -128,6 +132,31 @@
             z-index: 999;
             display: none;
         }
+
+        /* Estilos para el campo de entrada de enlace */
+        #linkInput {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        #playCustomLink {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        #playCustomLink:hover {
+            background-color: #f40612;
+        }
     </style>
 </head>
 <body>
@@ -156,6 +185,8 @@
         <video controls id="video">
             Tu navegador no soporta la reproducción de video.
         </video>
+        <input type="text" id="linkInput" placeholder="Pega aquí el enlace de Google Drive o Filemoon">
+        <button id="playCustomLink">Reproducir</button>
         <button id="closePlayer">Cerrar</button>
     </div>
 
@@ -166,10 +197,8 @@
         const overlay = document.getElementById('overlay');
         const videoElement = document.getElementById('video');
         const closePlayerBtn = document.getElementById('closePlayer');
-
-        // Token de autenticación de TMDb
-        const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMjI0MThkZjc2NTE4NmUyMjA4Y2Y0NGJlZjllM2JkMiIsIm5iZiI6MTcxMTEyMzY3OS44NjYsInN1YiI6IjY1ZmRhY2RmMzc4MDYyMDE3YzM4MTY1NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AlxLhYCCZdwKxX1G0i2OyAko3hb3WvXQx8SeP8Yki-A';
-        const API_URL = 'https://api.themoviedb.org/3';
+        const linkInput = document.getElementById('linkInput');
+        const playCustomLinkBtn = document.getElementById('playCustomLink');
 
         // Datos simulados (títulos de películas para buscar en TMDb)
         const data = {
@@ -238,31 +267,7 @@
             return null;
         }
 
-        // Escanear carátula automáticamente
-        async function scanCover(imageUrl, imgElement) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_TOKEN}`
-                    },
-                    body: JSON.stringify({ image: imageUrl })
-                });
-                const result = await response.json();
-                console.log('Información de la carátula:', result);
-
-                // Actualizar el título con la información de la API (si es necesario)
-                if (result.title) {
-                    const titleElement = imgElement.nextElementSibling; // El <h3> que sigue a la imagen
-                    titleElement.textContent = result.title;
-                }
-            } catch (error) {
-                console.error('Error al escanear la carátula:', error);
-            }
-        }
-
-        // Reproducir video (igual que antes)
+        // Reproducir video
         function playVideo(link) {
             videoElement.src = link;
             videoPlayer.style.display = 'block';
@@ -270,7 +275,7 @@
             videoElement.play();
         }
 
-        // Cerrar reproductor (igual que antes)
+        // Cerrar reproductor
         closePlayerBtn.addEventListener('click', () => {
             videoPlayer.style.display = 'none';
             overlay.style.display = 'none';
@@ -278,9 +283,28 @@
             videoElement.src = '';
         });
 
+        // Reproducir enlace personalizado (Google Drive o Filemoon)
+        playCustomLinkBtn.addEventListener('click', () => {
+            const link = linkInput.value.trim();
+            if (link) {
+                if (link.includes('drive.google.com')) {
+                    // Convertir enlace de Google Drive a un enlace directo
+                    const fileId = link.match(/\/file\/d\/([^\/]+)/)[1];
+                    const directLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                    playVideo(directLink);
+                } else if (link.includes('filemoon.to')) {
+                    // Reproducir directamente el enlace de Filemoon
+                    playVideo(link);
+                } else {
+                    alert('Enlace no válido. Solo se admiten enlaces de Google Drive o Filemoon.');
+                }
+            } else {
+                alert('Por favor, pega un enlace válido.');
+            }
+        });
+
         // Cargar contenido inicial
         loadContent('movies');
     </script>
 </body>
 </html>
-

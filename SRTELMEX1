@@ -95,9 +95,10 @@
             display: none;
         }
 
-        #videoPlayer video {
+        #videoPlayer iframe {
             width: 100%;
-            height: auto;
+            height: 400px;
+            border: none;
         }
 
         #closePlayer {
@@ -153,9 +154,7 @@
     <!-- Reproductor de video -->
     <div id="overlay"></div>
     <div id="videoPlayer">
-        <video controls id="video">
-            Tu navegador no soporta la reproducción de video.
-        </video>
+        <iframe id="video" src="" allowfullscreen></iframe>
         <button id="closePlayer">Cerrar</button>
     </div>
 
@@ -174,19 +173,19 @@
         // Datos simulados (títulos de películas para buscar en TMDb)
         const data = {
             movies: [
-                { title: 'El reino del planeta de los simios', image: '', link: 'https://drive.google.com/file/d/1a5dRkCP0l7kOuehiX6fwr29_X3PGVkx8/view?usp=sharing' },
-                { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' },
-                { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' }
+                { title: 'The Dark Knight', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0J/preview' },
+                { title: 'Inception', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0K/preview' },
+                { title: 'Interstellar', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0L/preview' }
             ],
             series: [
-                { title: 'Breaking Bad', image: '', link: 'https://www.example.com/serie1.mp4' },
-                { title: 'Game of Thrones', image: '', link: 'https://www.example.com/serie2.mkv' },
-                { title: 'Stranger Things', image: '', link: 'https://www.example.com/serie3.m3u8' }
+                { title: 'Breaking Bad', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0M/preview' },
+                { title: 'Game of Thrones', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0N/preview' },
+                { title: 'Stranger Things', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0O/preview' }
             ],
             tv: [
-                { title: 'The Office', image: '', link: 'https://www.example.com/tv1.mp4' },
-                { title: 'Friends', image: '', link: 'https://www.example.com/tv2.mkv' },
-                { title: 'The Mandalorian', image: '', link: 'https://www.example.com/tv3.m3u8' }
+                { title: 'The Office', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0P/preview' },
+                { title: 'Friends', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0Q/preview' },
+                { title: 'The Mandalorian', image: '', link: 'https://drive.google.com/file/d/1A2B3C4D5E6F7G8H9I0R/preview' }
             ]
         };
 
@@ -262,34 +261,17 @@
             }
         }
 
-        // Función para convertir enlaces de Google Drive y Filemoon
-        function convertLink(link) {
-            if (link.includes('drive.google.com')) {
-                // Convertir enlace de Google Drive a enlace directo
-                const fileId = link.match(/\/d\/(.+?)\//)[1];
-                return `https://drive.google.com/uc?export=download&id=${fileId}`;
-            } else if (link.includes('filemoon.to')) {
-                // Convertir enlace de Filemoon a enlace directo
-                return link; // Filemoon ya proporciona enlaces directos
-            } else {
-                return link; // Devolver el enlace original si no es de Google Drive o Filemoon
-            }
-        }
-
-        // Reproducir video
+        // Reproducir video desde Google Drive
         function playVideo(link) {
-            const directLink = convertLink(link);
-            videoElement.src = directLink;
+            videoElement.src = link;
             videoPlayer.style.display = 'block';
             overlay.style.display = 'block';
-            videoElement.play();
         }
 
         // Cerrar reproductor
         closePlayerBtn.addEventListener('click', () => {
             videoPlayer.style.display = 'none';
             overlay.style.display = 'none';
-            videoElement.pause();
             videoElement.src = '';
         });
 

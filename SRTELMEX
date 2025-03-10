@@ -20,7 +20,7 @@
         data-setup="{}"
     >
         <!-- Fuente del video -->
-        <source src="https://SKINHEAD.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D" type="application/x-mpegURL" />
+        <source src="https://SKINHEAD.tnas.link/tos/#/share?share_link=NpUZoXGf1TK%2F9d0afJfmBIOGVqVprv%2F5kKObGCem800Hq1o%3D" />
         <p class="vjs-no-js">
             Para ver este video, habilita JavaScript o considera actualizar a un navegador que
             <a href="https://videojs.com/html5-video-support/" target="_blank">soporte video HTML5</a>.

@@ -1,694 +1,215 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emby Content</title>
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    <style>
-        /* Estilos existentes (no modificados) */
-        body {
-            font-family: Arial, sans-serif;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            position: relative;
-            overflow: auto;
-            background: black;
-        }
-
-        .container {
-            width: 90%;
-            margin: 0 auto;
-            text-align: center;
-            position: relative;
-            z-index: 2;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .buttons button {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        #content {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .movie, .series {
-            flex: 1 1 calc(20% - 10px);
-            text-align: center;
-            box-sizing: border-box;
-            color: white;
-        }
-
-        .movie img, .series img {
-            width: 100%;
-            height: auto;
-            max-width: 150px;
-            max-height: 225px;
-            cursor: pointer;
-        }
-
-        /* Estilos del reproductor modificados */
-        #player {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        #playerContainer {
-            position: relative;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            padding: 20px;
-            max-width: 800px;
-            width: 90%;
-            text-align: center;
-        }
-
-        /* Estilos para Plyr */
-        #videoPlayer {
-            width: 100%;
-            max-height: 400px;
-            background: #000;
-            border-radius: 10px;
-        }
-
-        .plyr {
-            border-radius: 10px;
-        }
-
-        /* Botón de cerrar */
-        #closePlayer {
-            position: absolute;
-            background: #ff0000;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            top: 10px;
-            right: 10px;
-        }
-
-        /* Estilos responsivos para el reproductor */
-        @media (max-width: 768px) {
-            #videoPlayer {
-                max-height: 50%;
-            }
-
-            .movie, .series {
-                flex: 1 1 calc(33.33% - 10px);
-            }
-        }
-
-        /* Fondo dinámico */
-        #background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 90%;
-            height: 100%;
-            margin: 0 auto;
-            z-index: 0;
-            background-size: cover;
-            background-position: center;
-            opacity: 0.8;
-            transition: background-image 1s ease-in-out;
-            border-radius: 10px;
-        }
-    </style>
-</head>
-<body>
-    <!-- Fondo dinámico -->
-    <div id="background"></div>
-
-    <div class="container">
-        <h1>Mi Biblioteca Emby</h1>
-        <div class="buttons">
-            <button id="moviesBtn">Películas</button>
-            <button id="seriesBtn">Series</button>
-        </div>
-        <div id="content"></div>
-    </div>
-
-    <!-- Reproductor Plyr -->
-    <div id="player">
-        <div id="playerContainer">
-            <video id="videoPlayer" controls>
-                <!-- Aquí se agregará la fuente del video dinámicamente -->
-            </video>
-            <button id="closePlayer" onclick="closePlayer()">Cerrar</button>
-        </div>
-    </div>
-
-    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
-    <script>
-        const apiKey = 'efc8a8df6e1c4a50992af3bf3dd71903';
-        const localServerUrl = 'http://192.168.1.69:8096';
-        const remoteServerUrl = 'http://mxcuentas.ddns.net:8096';
-        let serverUrl = localServerUrl;
-
-        // Lista de carátulas para el fondo dinámico
-        let backgroundImages = [];
-        let currentBackgroundIndex = 0;
-
-        // Instancia de Plyr
-        let player;
-
-        // Función para probar la conexión a la URL local
-        async function testLocalConnection() {
-            try {
-                const response = await fetch(`${localServerUrl}/System/Info/Public?api_key=${apiKey}`);
-                if (response.ok) {
-                    serverUrl = localServerUrl;
-                } else {
-                    serverUrl = remoteServerUrl;
-                }
-            } catch (error) {
-                serverUrl = remoteServerUrl;
-            }
-        }
-
-        // Llamar a la función de prueba de conexión al cargar la página
-        document.addEventListener('DOMContentLoaded', async () => {
-            await testLocalConnection();
-            loadMovies(); // Cargar películas automáticamente al inicio
-            startBackgroundSlideShow(); // Iniciar el fondo dinámico
-        });
-
-        document.getElementById('moviesBtn').addEventListener('click', () => {
-            loadMovies();
-        });
-
-        document.getElementById('seriesBtn').addEventListener('click', () => {
-            loadSeries();
-        });
-
-        async function loadMovies() {
-            const response = await fetch(`${serverUrl}/Items?Recursive=true&IncludeItemTypes=Movie&SortBy=ProductionYear&SortOrder=Descending&api_key=${apiKey}`);
-            const data = await response.json();
-            displayItems(data.Items, 'movie');
-        }
-
-        async function loadSeries() {
-            const response = await fetch(`${serverUrl}/Items?Recursive=true&IncludeItemTypes=Series&SortBy=ProductionYear&SortOrder=Descending&api_key=${apiKey}`);
-            const data = await response.json();
-            displayItems(data.Items, 'series');
-        }
-
-        function displayItems(items, type) {
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '';
-
-            // Guardar las carátulas para el fondo dinámico
-            backgroundImages = items.map(item => `${serverUrl}/Items/${item.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}`);
-
-            items.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = type;
-                itemDiv.innerHTML = `
-                    <img src="${serverUrl}/Items/${item.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${item.Name}">
-                    <p>${item.Name}</p>
-                `;
-
-                if (type === 'movie') {
-                    itemDiv.querySelector('img').addEventListener('click', () => playItem(item.Id, itemDiv.querySelector('img').src));
-                } else if (type === 'series') {
-                    itemDiv.querySelector('img').addEventListener('click', () => showSeasons(item.Id, itemDiv.querySelector('img').src));
-                }
-
-                contentDiv.appendChild(itemDiv);
-            });
-
-            // Iniciar el fondo dinámico
-            startBackgroundSlideShow();
-        }
-
-        async function showSeasons(seriesId, imageUrl) {
-            const response = await fetch(`${serverUrl}/Shows/${seriesId}/Seasons?api_key=${apiKey}`);
-            const seasons = await response.json();
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '';
-
-            seasons.Items.forEach(season => {
-                const seasonDiv = document.createElement('div');
-                seasonDiv.className = 'season';
-                seasonDiv.innerHTML = `
-                    <img src="${serverUrl}/Items/${season.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${season.Name}">
-                    <p>${season.Name}</p>
-                `;
-
-                seasonDiv.querySelector('img').addEventListener('click', () => showEpisodes(seriesId, season.Id, seasonDiv.querySelector('img').src));
-                contentDiv.appendChild(seasonDiv);
-            });
-
-            const backButton = document.createElement('button');
-            backButton.innerText = 'Regresar a Series';
-            backButton.addEventListener('click', () => loadSeries());
-            contentDiv.appendChild(backButton);
-
-            // Cambiar el fondo a la carátula de la serie seleccionada
-            changeBackground(imageUrl);
-        }
-
-        async function showEpisodes(seriesId, seasonId, imageUrl) {
-            const response = await fetch(`${serverUrl}/Shows/${seriesId}/Episodes?SeasonId=${seasonId}&api_key=${apiKey}`);
-            const episodes = await response.json();
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '';
-
-            episodes.Items.forEach(episode => {
-                const episodeDiv = document.createElement('div');
-                episodeDiv.className = 'episode';
-                episodeDiv.innerHTML = `
-                    <img src="${serverUrl}/Items/${episode.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${episode.Name}">
-                    <p>${episode.Name}</p>
-                `;
-
-                episodeDiv.querySelector('img').addEventListener('click', () => playItem(episode.Id, episodeDiv.querySelector('img').src));
-                contentDiv.appendChild(episodeDiv);
-            });
-
-            const backButton = document.createElement('button');
-            backButton.innerText = 'Regresar a Temporadas';
-            backButton.addEventListener('click', () => showSeasons(seriesId, imageUrl));
-            contentDiv.appendChild(backButton);
-
-            // Cambiar el fondo a la carátula del episodio seleccionado
-            changeBackground(imageUrl);
-        }
-
-        function playItem(itemId, imageUrl) {
-            const videoUrl = `${serverUrl}/Items/${itemId}/Download?api_key=${apiKey}`;
-
-            // Inicializar Plyr si no está inicializado
-            if (!player) {
-                player = new Plyr('#videoPlayer', {
-                    controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-                    autoplay: true,
-                });
-            }
-
-            // Cambiar la fuente del video
-            const videoElement = document.getElementById('videoPlayer');
-            videoElement.src = videoUrl;
-
-            // Mostrar el reproductor
-            document.getElementById('player').style.display = 'flex';
-
-            // Cambiar el fondo a la carátula de la película o episodio seleccionado
-            changeBackground(imageUrl);
-        }
-
-        function closePlayer() {
-            if (player) {
-                player.pause();
-                player.source = null; // Limpiar la fuente del video
-            }
-            document.getElementById('player').style.display = 'none';
-
-            // Restaurar el fondo dinámico
-            startBackgroundSlideShow();
-        }
-
-        // Función para cambiar el fondo
-        function changeBackground(imageUrl) {
-            const background = document.getElementById('background');
-            background.style.backgroundImage = `url('${imageUrl}')`;
-        }
-
-        // Función para iniciar el fondo dinámico
-        function startBackgroundSlideShow() {
-            const background = document.getElementById('background');
-            if (backgroundImages.length > 0) {
-                setInterval(() => {
-                    const randomIndex = Math.floor(Math.random() * backgroundImages.length);
-                    background.style.backgroundImage = `url('${backgroundImages[randomIndex]}')`;
-                }, 15000);
-            }
-        }
-    </script>
-</body>
-</html> Content</title>
-    <style>
-        /* Estilos existentes (no modificados) */
-        body {
-            font-family: Arial, sans-serif;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            position: relative;
-            overflow: auto; /* Permitir desplazamiento */
-            background: black; /* Fondo negro */
-        }
-
-        .container {
-            width: 90%;
-            margin: 0 auto;
-            text-align: center;
-            position: relative;
-            z-index: 2;
-            background: rgba(0, 0, 0, 0.6); /* Contenedor más oscuro */
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .buttons button {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        #content {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between; /* Justificar sin espacios */
-            gap: 10px; /* Espacio entre elementos */
-        }
-
-        .movie, .series {
-            flex: 1 1 calc(20% - 10px); /* Ajustar el tamaño de los elementos */
-            text-align: center;
-            box-sizing: border-box;
-            color: white; /* Texto en color blanco */
-        }
-
-        .movie img, .series img {
-            width: 100%;
-            height: auto;
-            max-width: 150px;
-            max-height: 225px;
-            cursor: pointer;
-        }
-
-        /* Estilos del reproductor modificados */
-        #player {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        #playerContainer {
-            position: relative;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            padding: 20px;
-            max-width: 800px;
-            width: 90%;
-            text-align: center;
-        }
-
-        #videoPlayer {
-            width: 100%;
-            max-height: 400px;
-            background: #000;
-            border-radius: 10px;
-        }
-
-        /* Botón de cerrar */
-        #closePlayer {
-            position: absolute;
-            background: #ff0000;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            top: 10px;
-            right: 10px;
-        }
-
-        /* Estilos responsivos para el reproductor */
-        @media (max-width: 768px) {
-            #videoPlayer {
-                max-height: 50%;
-            }
-
-            .movie, .series {
-                flex: 1 1 calc(33.33% - 10px); /* Ajustar para dispositivos móviles */
-            }
-        }
-
-        /* Fondo dinámico */
-        #background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 90%; /* Mismo ancho que el contenedor */
-            height: 100%;
-            margin: 0 auto; /* Centrar horizontalmente */
-            z-index: 0; /* Detrás del contenido */
-            background-size: cover;
-            background-position: center;
-            opacity: 0.8; /* Mayor intensidad (80% de opacidad) */
-            transition: background-image 1s ease-in-out;
-            border-radius: 10px; /* Mismo borde redondeado que el contenedor */
-        }
-    </style>
-</head>
-<body>
-    <!-- Fondo dinámico -->
-    <div id="background"></div>
-
-    <div class="container">
-        <h1>Mi Biblioteca Emby</h1>
-        <div class="buttons">
-            <button id="moviesBtn">Películas</button>
-            <button id="seriesBtn">Series</button>
-        </div>
-        <div id="content"></div>
-    </div>
-
-    <!-- Reproductor Universal -->
-    <div id="player">
-        <div id="playerContainer">
-            <video id="videoPlayer" controls>
-                <!-- Aquí se agregará la fuente del video dinámicamente -->
-            </video>
-            <button id="closePlayer" onclick="closePlayer()">Cerrar</button>
-        </div>
-    </div>
-
-    <script>
-        const apiKey = 'efc8a8df6e1c4a50992af3bf3dd71903';
-        const localServerUrl = 'http://192.168.1.69:8096';
-        const remoteServerUrl = 'http://mxcuentas.ddns.net:8096';
-        let serverUrl = localServerUrl;
-
-        // Lista de carátulas para el fondo dinámico
-        let backgroundImages = [];
-        let currentBackgroundIndex = 0;
-
-        // Función para probar la conexión a la URL local
-        async function testLocalConnection() {
-            try {
-                const response = await fetch(`${localServerUrl}/System/Info/Public?api_key=${apiKey}`);
-                if (response.ok) {
-                    serverUrl = localServerUrl;
-                } else {
-                    serverUrl = remoteServerUrl;
-                }
-            } catch (error) {
-                serverUrl = remoteServerUrl;
-            }
-        }
-
-        // Llamar a la función de prueba de conexión al cargar la página
-        document.addEventListener('DOMContentLoaded', async () => {
-            await testLocalConnection();
-            loadMovies(); // Cargar películas automáticamente al inicio
-            startBackgroundSlideShow(); // Iniciar el fondo dinámico
-        });
-
-        document.getElementById('moviesBtn').addEventListener('click', () => {
-            loadMovies();
-        });
-
-        document.getElementById('seriesBtn').addEventListener('click', () => {
-            loadSeries();
-        });
-
-        async function loadMovies() {
-            const response = await fetch(`${serverUrl}/Items?Recursive=true&IncludeItemTypes=Movie&SortBy=ProductionYear&SortOrder=Descending&api_key=${apiKey}`);
-            const data = await response.json();
-            displayItems(data.Items, 'movie');
-        }
-
-        async function loadSeries() {
-            const response = await fetch(`${serverUrl}/Items?Recursive=true&IncludeItemTypes=Series&SortBy=ProductionYear&SortOrder=Descending&api_key=${apiKey}`);
-            const data = await response.json();
-            displayItems(data.Items, 'series');
-        }
-
-        function displayItems(items, type) {
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '';
-
-            // Guardar las carátulas para el fondo dinámico
-            backgroundImages = items.map(item => `${serverUrl}/Items/${item.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}`);
-
-            items.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = type;
-                itemDiv.innerHTML = `
-                    <img src="${serverUrl}/Items/${item.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${item.Name}">
-                    <p>${item.Name}</p>
-                `;
-
-                if (type === 'movie') {
-                    itemDiv.querySelector('img').addEventListener('click', () => playItem(item.Id, itemDiv.querySelector('img').src));
-                } else if (type === 'series') {
-                    itemDiv.querySelector('img').addEventListener('click', () => showSeasons(item.Id, itemDiv.querySelector('img').src));
-                }
-
-                contentDiv.appendChild(itemDiv);
-            });
-
-            // Iniciar el fondo dinámico
-            startBackgroundSlideShow();
-        }
-
-        async function showSeasons(seriesId, imageUrl) {
-            const response = await fetch(`${serverUrl}/Shows/${seriesId}/Seasons?api_key=${apiKey}`);
-            const seasons = await response.json();
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '';
-
-            seasons.Items.forEach(season => {
-                const seasonDiv = document.createElement('div');
-                seasonDiv.className = 'season';
-                seasonDiv.innerHTML = `
-                    <img src="${serverUrl}/Items/${season.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${season.Name}">
-                    <p>${season.Name}</p>
-                `;
-
-                seasonDiv.querySelector('img').addEventListener('click', () => showEpisodes(seriesId, season.Id, seasonDiv.querySelector('img').src));
-                contentDiv.appendChild(seasonDiv);
-            });
-
-            const backButton = document.createElement('button');
-            backButton.innerText = 'Regresar a Series';
-            backButton.addEventListener('click', () => loadSeries());
-            contentDiv.appendChild(backButton);
-
-            // Cambiar el fondo a la carátula de la serie seleccionada
-            changeBackground(imageUrl);
-        }
-
-        async function showEpisodes(seriesId, seasonId, imageUrl) {
-            const response = await fetch(`${serverUrl}/Shows/${seriesId}/Episodes?SeasonId=${seasonId}&api_key=${apiKey}`);
-            const episodes = await response.json();
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '';
-
-            episodes.Items.forEach(episode => {
-                const episodeDiv = document.createElement('div');
-                episodeDiv.className = 'episode';
-                episodeDiv.innerHTML = `
-                    <img src="${serverUrl}/Items/${episode.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${episode.Name}">
-                    <p>${episode.Name}</p>
-                `;
-
-                episodeDiv.querySelector('img').addEventListener('click', () => playItem(episode.Id, episodeDiv.querySelector('img').src));
-                contentDiv.appendChild(episodeDiv);
-            });
-
-            const backButton = document.createElement('button');
-            backButton.innerText = 'Regresar a Temporadas';
-            backButton.addEventListener('click', () => showSeasons(seriesId, imageUrl));
-            contentDiv.appendChild(backButton);
-
-            // Cambiar el fondo a la carátula del episodio seleccionado
-            changeBackground(imageUrl);
-        }
-
-        function playItem(itemId, imageUrl) {
-            const player = document.getElementById('videoPlayer');
-            const videoUrl = `${serverUrl}/Items/${itemId}/Download?api_key=${apiKey}`;
-
-            // Limpiar el reproductor antes de agregar una nueva fuente
-            player.innerHTML = '';
-
-            // Agregar la fuente del video
-            const source = document.createElement('source');
-            source.src = videoUrl;
-            player.appendChild(source);
-
-            // Cargar y reproducir el video
-            player.load();
-            player.play();
-
-            // Mostrar el reproductor
-            document.getElementById('player').style.display = 'flex';
-
-            // Cambiar el fondo a la carátula de la película o episodio seleccionado
-            changeBackground(imageUrl);
-        }
-
-        function closePlayer() {
-            const player = document.getElementById('videoPlayer');
-            player.pause();
-            player.innerHTML = ''; // Limpiar el reproductor
-            document.getElementById('player').style.display = 'none';
-
-            // Restaurar el fondo dinámico
-            startBackgroundSlideShow();
-        }
-
-        // Función para cambiar el fondo
-        function changeBackground(imageUrl) {
-            const background = document.getElementById('background');
-            background.style.backgroundImage = `url('${imageUrl}')`;
-        }
-
-        // Función para iniciar el fondo dinámico
-        function startBackgroundSlideShow() {
-            const background = document.getElementById('background');
-            if (backgroundImages.length > 0) {
-                setInterval(() => {
-                    // Seleccionar una imagen aleatoria
-                    const randomIndex = Math.floor(Math.random() * backgroundImages.length);
-                    background.style.backgroundImage = `url('${backgroundImages[randomIndex]}')`;
-                }, 15000); // Cambiar cada 15 segundos
-            }
-        }
-    </script>
-</body>
-</html>
+EXTM3U
+#EXTINF:-1,Harry Potter y la orden del Fénix
+http://mxcuentas.ddns.net:8096/Videos/183632/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Harry Potter y las reliquias de la muerte: Parte 2
+http://mxcuentas.ddns.net:8096/Videos/183633/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Harry Potter y las reliquias de la muerte (1ª parte)
+http://mxcuentas.ddns.net:8096/Videos/183634/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Harry Potter y el cáliz de fuego
+http://mxcuentas.ddns.net:8096/Videos/183635/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Harry Potter y el prisionero de Azkaban
+http://mxcuentas.ddns.net:8096/Videos/183636/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Harry Potter y la cámara secreta
+http://mxcuentas.ddns.net:8096/Videos/183637/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Harry Potter y la piedra filosofal
+http://mxcuentas.ddns.net:8096/Videos/183638/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Interestelar
+http://mxcuentas.ddns.net:8096/Videos/183639/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,¿Qué Pasó Ayer? Parte II
+http://mxcuentas.ddns.net:8096/Videos/189089/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,¿Qué Pasó Ayer?
+http://mxcuentas.ddns.net:8096/Videos/189090/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: En la mira de los asesinos
+http://mxcuentas.ddns.net:8096/Videos/189091/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Casino Royale
+http://mxcuentas.ddns.net:8096/Videos/189092/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Los diamantes son eternos
+http://mxcuentas.ddns.net:8096/Videos/189093/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Otro día para morir
+http://mxcuentas.ddns.net:8096/Videos/189094/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: El satánico Dr. No
+http://mxcuentas.ddns.net:8096/Videos/189095/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Sólo para tus ojos
+http://mxcuentas.ddns.net:8096/Videos/189096/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Desde Rusia con amor
+http://mxcuentas.ddns.net:8096/Videos/189097/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Contra Goldfinger
+http://mxcuentas.ddns.net:8096/Videos/189098/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Licencia para matar
+http://mxcuentas.ddns.net:8096/Videos/189099/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Vive y deja morir
+http://mxcuentas.ddns.net:8096/Videos/189100/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Misión espacial
+http://mxcuentas.ddns.net:8096/Videos/189101/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Nunca digas nunca jamás
+http://mxcuentas.ddns.net:8096/Videos/189102/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Sin tiempo para morir
+http://mxcuentas.ddns.net:8096/Videos/189103/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Octopussy contra las chicas mortales
+http://mxcuentas.ddns.net:8096/Videos/189104/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Al servicio secreto de Su Majestad
+http://mxcuentas.ddns.net:8096/Videos/189105/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Quantum Of Solace
+http://mxcuentas.ddns.net:8096/Videos/189106/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Operación Skyfall
+http://mxcuentas.ddns.net:8096/Videos/189107/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Spectre
+http://mxcuentas.ddns.net:8096/Videos/189108/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Su nombre es peligro
+http://mxcuentas.ddns.net:8096/Videos/189109/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: El hombre del revólver de oro
+http://mxcuentas.ddns.net:8096/Videos/189110/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: La espía que me amó
+http://mxcuentas.ddns.net:8096/Videos/189111/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: El mundo no basta
+http://mxcuentas.ddns.net:8096/Videos/189112/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Operación trueno
+http://mxcuentas.ddns.net:8096/Videos/189113/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: El mañana nunca muere
+http://mxcuentas.ddns.net:8096/Videos/189114/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,007: Sólo se vive dos veces
+http://mxcuentas.ddns.net:8096/Videos/189115/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,300: El Nacimiento de un Imperio
+http://mxcuentas.ddns.net:8096/Videos/189116/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,300
+http://mxcuentas.ddns.net:8096/Videos/189117/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,A todos los chicos: P. D. Todavía te quiero
+http://mxcuentas.ddns.net:8096/Videos/189118/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,A todos los chicos de los que me enamoré
+http://mxcuentas.ddns.net:8096/Videos/189119/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,A Todos Los Chicos Para Siempre
+http://mxcuentas.ddns.net:8096/Videos/189120/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Acorralado
+http://mxcuentas.ddns.net:8096/Videos/189123/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Acorralados
+http://mxcuentas.ddns.net:8096/Videos/189124/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Actividad Paranormal
+http://mxcuentas.ddns.net:8096/Videos/189125/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Actividad Paranormal 2
+http://mxcuentas.ddns.net:8096/Videos/189126/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Actividad Paranormal 3
+http://mxcuentas.ddns.net:8096/Videos/189127/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Actividad Paranormal: Los marcados
+http://mxcuentas.ddns.net:8096/Videos/189128/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,After: Aquí empieza todo
+http://mxcuentas.ddns.net:8096/Videos/189129/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,After: En mil pedazos
+http://mxcuentas.ddns.net:8096/Videos/189130/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,After: Almas Perdidas
+http://mxcuentas.ddns.net:8096/Videos/189131/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,After: Amor Infinito
+http://mxcuentas.ddns.net:8096/Videos/189132/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Aladdin
+http://mxcuentas.ddns.net:8096/Videos/189133/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Aladdín: El regreso de Jafar
+http://mxcuentas.ddns.net:8096/Videos/189134/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Aladdín y el rey de los ladrones
+http://mxcuentas.ddns.net:8096/Videos/189135/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alerta en lo Profundo
+http://mxcuentas.ddns.net:8096/Videos/189136/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alerta en lo Profundo 2
+http://mxcuentas.ddns.net:8096/Videos/189137/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alerta en lo Profundo 3
+http://mxcuentas.ddns.net:8096/Videos/189138/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alicia a través del espejo
+http://mxcuentas.ddns.net:8096/Videos/189139/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alicia en el país de las maravillas
+http://mxcuentas.ddns.net:8096/Videos/189140/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alien: El Octavo Pasajero
+http://mxcuentas.ddns.net:8096/Videos/189141/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alien³
+http://mxcuentas.ddns.net:8096/Videos/189142/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alien: Covenant
+http://mxcuentas.ddns.net:8096/Videos/189143/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alien: La resurrección
+http://mxcuentas.ddns.net:8096/Videos/189144/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Aliens: El Regreso
+http://mxcuentas.ddns.net:8096/Videos/189145/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Prometeo
+http://mxcuentas.ddns.net:8096/Videos/189146/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alien vs. Depredador 2
+http://mxcuentas.ddns.net:8096/Videos/189147/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alien vs. Depredador
+http://mxcuentas.ddns.net:8096/Videos/189148/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alvin Y Las Ardillas
+http://mxcuentas.ddns.net:8096/Videos/189149/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alvin y las Ardillas 3
+http://mxcuentas.ddns.net:8096/Videos/189150/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alvin y las Ardillas: Aventura sobre ruedas
+http://mxcuentas.ddns.net:8096/Videos/189151/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Alvin y las Ardillas 2
+http://mxcuentas.ddns.net:8096/Videos/189152/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie 2: Tu Segunda Vez Es Mejor
+http://mxcuentas.ddns.net:8096/Videos/189153/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie 4: El Reencuentro
+http://mxcuentas.ddns.net:8096/Videos/189154/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie presenta: La casa Beta
+http://mxcuentas.ddns.net:8096/Videos/189155/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie presenta: Campamento de bandas
+http://mxcuentas.ddns.net:8096/Videos/189156/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie 3: La Boda
+http://mxcuentas.ddns.net:8096/Videos/189157/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie presenta: El libro del amor
+http://mxcuentas.ddns.net:8096/Videos/189158/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie presenta: La milla al desnudo
+http://mxcuentas.ddns.net:8096/Videos/189159/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie presenta: Las chicas mandan
+http://mxcuentas.ddns.net:8096/Videos/189160/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,American Pie: Tu Primera vez
+http://mxcuentas.ddns.net:8096/Videos/189161/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Animales Fantásticos 3: Los Secretos de Dumbledore
+http://mxcuentas.ddns.net:8096/Videos/189162/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Animales Fantásticos: Una Historia Natural
+http://mxcuentas.ddns.net:8096/Videos/189163/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Animales Fantásticos 2: Los Crímenes de Grindelwald
+http://mxcuentas.ddns.net:8096/Videos/189164/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Animales Fantásticos: Y Dónde Encontrarlos
+http://mxcuentas.ddns.net:8096/Videos/189165/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Attack on Titan: El arco y la flecha escarlata
+http://mxcuentas.ddns.net:8096/Videos/189170/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Attack on Titan: Alas de la libertad
+http://mxcuentas.ddns.net:8096/Videos/189171/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Attack on Titan: El rugido del despertar
+http://mxcuentas.ddns.net:8096/Videos/189172/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie y Chelsea: El cumpleaños perdido
+http://mxcuentas.ddns.net:8096/Videos/189173/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie Y Sus Hermanas En Una Historia De Ponis
+http://mxcuentas.ddns.net:8096/Videos/189174/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie y sus hermanas en la busqueda de Perritos
+http://mxcuentas.ddns.net:8096/Videos/189175/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie y sus Hermanas en una aventura de perritos
+http://mxcuentas.ddns.net:8096/Videos/189176/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: Moda Mágica en París
+http://mxcuentas.ddns.net:8096/Videos/189177/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: Una navidad perfecta
+http://mxcuentas.ddns.net:8096/Videos/189178/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie y el castillo de diamantes
+http://mxcuentas.ddns.net:8096/Videos/189179/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie y la magia del pegaso
+http://mxcuentas.ddns.net:8096/Videos/189180/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie y la puerta secreta
+http://mxcuentas.ddns.net:8096/Videos/189181/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie y las tres mosqueteras
+http://mxcuentas.ddns.net:8096/Videos/189182/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: Rapunzel
+http://mxcuentas.ddns.net:8096/Videos/189183/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: La Princesa de la Isla
+http://mxcuentas.ddns.net:8096/Videos/189184/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: La Princesa y la plebeya
+http://mxcuentas.ddns.net:8096/Videos/189185/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: Gran ciudad, Grandes sueños
+http://mxcuentas.ddns.net:8096/Videos/189186/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie y los delfines mágicos
+http://mxcuentas.ddns.net:8096/Videos/189187/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: Escuela de Princesas
+http://mxcuentas.ddns.net:8096/Videos/189188/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: Fairytopia
+http://mxcuentas.ddns.net:8096/Videos/189189/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie: ¡Feliz cumpleaños!
+http://mxcuentas.ddns.net:8096/Videos/189190/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie Fairytopia 2: La magia del arco iris
+http://mxcuentas.ddns.net:8096/Videos/189191/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie en Un cuento de Navidad
+http://mxcuentas.ddns.net:8096/Videos/189192/stream?static=true&api_key=efc8a8df6e1c4a50992af3bf3dd71903
+#EXTINF:-1,Barbie en una Aventura de Sirenas
+http://mxcuentas.

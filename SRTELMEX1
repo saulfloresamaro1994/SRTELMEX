@@ -3,329 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interfaz tipo Netflix con Reproductor</title>
+    <title>Emby Content</title>
     <style>
-        /* Estilos CSS (igual que antes) */
+        /* Estilos existentes (no modificados) */
         body {
             font-family: Arial, sans-serif;
+            color: #333;
             margin: 0;
             padding: 0;
-            background-color: #141414;
-            color: white;
+            position: relative;
+            overflow: auto; /* Permitir desplazamiento */
+            background: black; /* Fondo negro */
         }
 
         .container {
-            max-width: 1200px;
+            width: 90%;
             margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
             text-align: center;
-            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.6); /* Contenedor más oscuro */
+            padding: 20px;
+            border-radius: 10px;
         }
 
-        nav button {
-            background-color: #e50914;
-            color: white;
-            border: none;
+        .buttons button {
+            margin: 10px;
             padding: 10px 20px;
-            margin: 0 10px;
-            cursor: pointer;
             font-size: 16px;
-        }
-
-        nav button:hover {
-            background-color: #f40612;
+            cursor: pointer;
         }
 
         #content {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 20px;
+            justify-content: space-between; /* Justificar sin espacios */
+            gap: 10px; /* Espacio entre elementos */
         }
 
-        .content-item {
-            width: 200px;
-            background-color: #333;
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
+        .movie, .series {
+            flex: 1 1 calc(20% - 10px); /* Ajustar el tamaño de los elementos */
             text-align: center;
-            padding: 10px;
+            box-sizing: border-box;
+            color: white; /* Texto en color blanco */
         }
 
-        .content-item img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        .content-item h3 {
-            margin: 10px 0;
-            font-size: 16px;
-        }
-
-        .content-item button {
-            background-color: #e50914;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 14px;
-            border-radius: 5px;
-        }
-
-        .content-item button:hover {
-            background-color: #f40612;
-        }
-
-        /* Estilos del reproductor */
-        #videoPlayer {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 800px;
-            background-color: #000;
-            z-index: 1000;
-            display: none;
-        }
-
-        #videoPlayer video {
+        .movie img, .series img {
             width: 100%;
             height: auto;
-        }
-
-        #closePlayer {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #e50914;
-            color: white;
-            border: none;
-            padding: 5px 10px;
+            max-width: 150px;
+            max-height: 225px;
             cursor: pointer;
-            font-size: 14px;
-            border-radius: 5px;
         }
 
-        #closePlayer:hover {
-            background-color: #f40612;
-        }
-
-        /* Fondo oscuro detrás del reproductor */
-        #overlay {
+        /* Estilos del reproductor modificados */
+        #player {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 999;
+            background: rgba(0, 0, 0, 0.9);
             display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
 
-        /* Botón de Chromecast */
-        #castButton {
+        #playerContainer {
+            position: relative;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+        }
+
+        #videoPlayer {
+            width: 100%;
+            max-height: 400px;
+            background: #000;
+            border-radius: 10px;
+        }
+
+        /* Botón de cerrar */
+        #closePlayer {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: #e50914;
+            background: #ff0000;
             color: white;
             border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 14px;
             border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 10px;
+            right: 10px;
         }
 
-        #castButton:hover {
-            background-color: #f40612;
+        /* Estilos responsivos para el reproductor */
+        @media (max-width: 768px) {
+            #videoPlayer {
+                max-height: 50%;
+            }
+
+            .movie, .series {
+                flex: 1 1 calc(33.33% - 10px); /* Ajustar para dispositivos móviles */
+            }
+        }
+
+        /* Fondo dinámico */
+        #background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 90%; /* Mismo ancho que el contenedor */
+            height: 100%;
+            margin: 0 auto; /* Centrar horizontalmente */
+            z-index: 0; /* Detrás del contenido */
+            background-size: cover;
+            background-position: center;
+            opacity: 0.8; /* Mayor intensidad (80% de opacidad) */
+            transition: background-image 1s ease-in-out;
+            border-radius: 10px; /* Mismo borde redondeado que el contenedor */
         }
     </style>
 </head>
 <body>
+    <!-- Fondo dinámico -->
+    <div id="background"></div>
+
     <div class="container">
-        <!-- Encabezado con botones -->
-        <header>
-            <h1>SERVIDOR SKINHEAD</h1>
-            <nav>
-                <button id="moviesBtn">Películas</button>
-                <button id="seriesBtn">Series</button>
-                <button id="tvBtn">TV</button>
-            </nav>
-        </header>
-
-        <!-- Contenido dinámico -->
-        <main>
-            <div id="content">
-                <!-- Aquí se cargará el contenido dinámico -->
-            </div>
-        </main>
+        <h1>Mi Biblioteca Emby</h1>
+        <div class="buttons">
+            <button id="moviesBtn">Películas</button>
+            <button id="seriesBtn">Series</button>
+        </div>
+        <div id="content"></div>
     </div>
 
-    <!-- Reproductor de video -->
-    <div id="overlay"></div>
-    <div id="videoPlayer">
-        <button id="castButton">Transmitir a TV</button>
-        <video controls id="video">
-            Tu navegador no soporta la reproducción de video.
-        </video>
-        <button id="closePlayer">Cerrar</button>
+    <!-- Reproductor Universal -->
+    <div id="player">
+        <div id="playerContainer">
+            <video id="videoPlayer" controls>
+                <!-- Aquí se agregará la fuente del video dinámicamente -->
+            </video>
+            <button id="closePlayer" onclick="closePlayer()">Cerrar</button>
+        </div>
     </div>
 
-    <!-- Script de Chromecast -->
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
     <script>
-        // Lógica en JavaScript
-        const content = document.getElementById('content');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const overlay = document.getElementById('overlay');
-        const videoElement = document.getElementById('video');
-        const closePlayerBtn = document.getElementById('closePlayer');
-        const castButton = document.getElementById('castButton');
+        const apiKey = 'efc8a8df6e1c4a50992af3bf3dd71903';
+        const localServerUrl = 'http://192.168.1.69:8096';
+        const remoteServerUrl = 'http://mxcuentas.ddns.net:8096';
+        let serverUrl = localServerUrl;
 
-        // Token de autenticación de TMDb
-        const API_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlMjI0MThkZjc2NTE4NmUyMjA4Y2Y0NGJlZjllM2JkMiIsIm5iZiI6MTcxMTEyMzY3OS44NjYsInN1YiI6IjY1ZmRhY2RmMzc4MDYyMDE3YzM4MTY1NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AlxLhYCCZdwKxX1G0i2OyAko3hb3WvXQx8SeP8Yki-A';
-        const API_URL = 'https://api.themoviedb.org/3';
+        // Lista de carátulas para el fondo dinámico
+        let backgroundImages = [];
+        let currentBackgroundIndex = 0;
 
-        // Datos simulados (títulos de películas para buscar en TMDb)
-        const data = {
-            movies: [
-                { title: 'Capitán América: Brave New World', image: '', link: 'http://tv.proyectox.vip:8080/movie/lopjorgetv2/B2HcOqCMW0/109060.mkv' },
-                { title: 'Sonic 3: La película', image: '', link: 'http://tv.proyectox.vip:8080/movie/lopjorgetv2/B2HcOqCMW0/106546.mkv' },
-                { title: 'Kraven el cazador', image: '', link: 'http://tv.proyectox.vip:8080/movie/lopjorgetv2/B2HcOqCMW0/105171.mkv' },
-                { title: 'The Dark Knight', image: '', link: 'https://www.example.com/video.m3u8' }
-            ],
-            series: [
-                { title: 'Breaking Bad', image: '', link: 'https://www.example.com/serie1.mp4' },
-                { title: 'Game of Thrones', image: '', link: 'https://www.example.com/serie2.mkv' },
-                { title: 'Stranger Things', image: '', link: 'https://www.example.com/serie3.m3u8' }
-            ],
-            tv: [
-                { title: 'The Office', image: '', link: 'https://www.example.com/tv1.mp4' },
-                { title: 'Friends', image: '', link: 'https://www.example.com/tv2.mkv' },
-                { title: 'The Mandalorian', image: '', link: 'https://www.example.com/tv3.m3u8' }
-            ]
-        };
-
-        // Inicializar Chromecast
-        function initializeCastApi() {
-            cast.framework.CastContext.getInstance().setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-            });
-        }
-
-        // Transmitir a Chromecast
-        function castVideo() {
-            const castSession = cast.framework.CastContext.getInstance().getCurrentSession();
-            if (castSession) {
-                const mediaInfo = new chrome.cast.media.MediaInfo(videoElement.src, 'video/mp4');
-                const request = new chrome.cast.media.LoadRequest(mediaInfo);
-                castSession.loadMedia(request).then(
-                    () => console.log('Transmisión iniciada'),
-                    (error) => console.error('Error al transmitir:', error)
-                );
-            }
-        }
-
-        // Configurar el botón de Chromecast
-        castButton.addEventListener('click', castVideo);
-
-        // Inicializar la API de Chromecast cuando esté lista
-        window['__onGCastApiAvailable'] = (isAvailable) => {
-            if (isAvailable) {
-                initializeCastApi();
-            }
-        };
-
-        // Resto del código (igual que antes)
-        document.getElementById('moviesBtn').addEventListener('click', () => loadContent('movies'));
-        document.getElementById('seriesBtn').addEventListener('click', () => loadContent('series'));
-        document.getElementById('tvBtn').addEventListener('click', () => loadContent('tv'));
-
-        async function loadContent(type) {
-            content.innerHTML = '';
-            for (const item of data[type]) {
-                const itemElement = document.createElement('div');
-                itemElement.classList.add('content-item');
-
-                const tmdbData = await searchTmdb(item.title);
-                if (tmdbData) {
-                    item.image = `https://image.tmdb.org/t/p/w500${tmdbData.poster_path}`;
-                    item.title = tmdbData.title || tmdbData.name;
-                }
-
-                itemElement.innerHTML = `
-                    <img src="${item.image}" alt="${item.title}" onload="scanCover('${item.image}', this)">
-                    <h3>${item.title}</h3>
-                    <button onclick="playVideo('${item.link}')">Reproducir</button>
-                `;
-                content.appendChild(itemElement);
-            }
-        }
-
-        async function searchTmdb(query) {
+        // Función para probar la conexión a la URL local
+        async function testLocalConnection() {
             try {
-                const response = await fetch(`${API_URL}/search/movie?query=${encodeURIComponent(query)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${API_TOKEN}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                const data = await response.json();
-                if (data.results && data.results.length > 0) {
-                    return data.results[0];
+                const response = await fetch(`${localServerUrl}/System/Info/Public?api_key=${apiKey}`);
+                if (response.ok) {
+                    serverUrl = localServerUrl;
+                } else {
+                    serverUrl = remoteServerUrl;
                 }
             } catch (error) {
-                console.error('Error al buscar en TMDb:', error);
-            }
-            return null;
-        }
-
-        async function scanCover(imageUrl, imgElement) {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_TOKEN}`
-                    },
-                    body: JSON.stringify({ image: imageUrl })
-                });
-                const result = await response.json();
-                console.log('Información de la carátula:', result);
-
-                if (result.title) {
-                    const titleElement = imgElement.nextElementSibling;
-                    titleElement.textContent = result.title;
-                }
-            } catch (error) {
-                console.error('Error al escanear la carátula:', error);
+                serverUrl = remoteServerUrl;
             }
         }
 
-        function playVideo(link) {
-            videoElement.src = link;
-            videoPlayer.style.display = 'block';
-            overlay.style.display = 'block';
-            videoElement.play();
-        }
-
-        closePlayerBtn.addEventListener('click', () => {
-            videoPlayer.style.display = 'none';
-            overlay.style.display = 'none';
-            videoElement.pause();
-            videoElement.src = '';
+        // Llamar a la función de prueba de conexión al cargar la página
+        document.addEventListener('DOMContentLoaded', async () => {
+            await testLocalConnection();
+            loadMovies(); // Cargar películas automáticamente al inicio
+            startBackgroundSlideShow(); // Iniciar el fondo dinámico
         });
 
-        loadContent('movies');
+        document.getElementById('moviesBtn').addEventListener('click', () => {
+            loadMovies();
+        });
+
+        document.getElementById('seriesBtn').addEventListener('click', () => {
+            loadSeries();
+        });
+
+        async function loadMovies() {
+            const response = await fetch(`${serverUrl}/Items?Recursive=true&IncludeItemTypes=Movie&SortBy=ProductionYear&SortOrder=Descending&api_key=${apiKey}`);
+            const data = await response.json();
+            displayItems(data.Items, 'movie');
+        }
+
+        async function loadSeries() {
+            const response = await fetch(`${serverUrl}/Items?Recursive=true&IncludeItemTypes=Series&SortBy=ProductionYear&SortOrder=Descending&api_key=${apiKey}`);
+            const data = await response.json();
+            displayItems(data.Items, 'series');
+        }
+
+        function displayItems(items, type) {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '';
+
+            // Guardar las carátulas para el fondo dinámico
+            backgroundImages = items.map(item => `${serverUrl}/Items/${item.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}`);
+
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = type;
+                itemDiv.innerHTML = `
+                    <img src="${serverUrl}/Items/${item.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${item.Name}">
+                    <p>${item.Name}</p>
+                `;
+
+                if (type === 'movie') {
+                    itemDiv.querySelector('img').addEventListener('click', () => playItem(item.Id, itemDiv.querySelector('img').src));
+                } else if (type === 'series') {
+                    itemDiv.querySelector('img').addEventListener('click', () => showSeasons(item.Id, itemDiv.querySelector('img').src));
+                }
+
+                contentDiv.appendChild(itemDiv);
+            });
+
+            // Iniciar el fondo dinámico
+            startBackgroundSlideShow();
+        }
+
+        async function showSeasons(seriesId, imageUrl) {
+            const response = await fetch(`${serverUrl}/Shows/${seriesId}/Seasons?api_key=${apiKey}`);
+            const seasons = await response.json();
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '';
+
+            seasons.Items.forEach(season => {
+                const seasonDiv = document.createElement('div');
+                seasonDiv.className = 'season';
+                seasonDiv.innerHTML = `
+                    <img src="${serverUrl}/Items/${season.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${season.Name}">
+                    <p>${season.Name}</p>
+                `;
+
+                seasonDiv.querySelector('img').addEventListener('click', () => showEpisodes(seriesId, season.Id, seasonDiv.querySelector('img').src));
+                contentDiv.appendChild(seasonDiv);
+            });
+
+            const backButton = document.createElement('button');
+            backButton.innerText = 'Regresar a Series';
+            backButton.addEventListener('click', () => loadSeries());
+            contentDiv.appendChild(backButton);
+
+            // Cambiar el fondo a la carátula de la serie seleccionada
+            changeBackground(imageUrl);
+        }
+
+        async function showEpisodes(seriesId, seasonId, imageUrl) {
+            const response = await fetch(`${serverUrl}/Shows/${seriesId}/Episodes?SeasonId=${seasonId}&api_key=${apiKey}`);
+            const episodes = await response.json();
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '';
+
+            episodes.Items.forEach(episode => {
+                const episodeDiv = document.createElement('div');
+                episodeDiv.className = 'episode';
+                episodeDiv.innerHTML = `
+                    <img src="${serverUrl}/Items/${episode.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${episode.Name}">
+                    <p>${episode.Name}</p>
+                `;
+
+                episodeDiv.querySelector('img').addEventListener('click', () => playItem(episode.Id, episodeDiv.querySelector('img').src));
+                contentDiv.appendChild(episodeDiv);
+            });
+
+            const backButton = document.createElement('button');
+            backButton.innerText = 'Regresar a Temporadas';
+            backButton.addEventListener('click', () => showSeasons(seriesId, imageUrl));
+            contentDiv.appendChild(backButton);
+
+            // Cambiar el fondo a la carátula del episodio seleccionado
+            changeBackground(imageUrl);
+        }
+
+        function playItem(itemId, imageUrl) {
+            const player = document.getElementById('videoPlayer');
+            const videoUrl = `${serverUrl}/Items/${itemId}/Download?api_key=${apiKey}`;
+
+            // Limpiar el reproductor antes de agregar una nueva fuente
+            player.innerHTML = '';
+
+            // Agregar la fuente del video
+            const source = document.createElement('source');
+            source.src = videoUrl;
+            player.appendChild(source);
+
+            // Cargar y reproducir el video
+            player.load();
+            player.play();
+
+            // Mostrar el reproductor
+            document.getElementById('player').style.display = 'flex';
+
+            // Cambiar el fondo a la carátula de la película o episodio seleccionado
+            changeBackground(imageUrl);
+        }
+
+        function closePlayer() {
+            const player = document.getElementById('videoPlayer');
+            player.pause();
+            player.innerHTML = ''; // Limpiar el reproductor
+            document.getElementById('player').style.display = 'none';
+
+            // Restaurar el fondo dinámico
+            startBackgroundSlideShow();
+        }
+
+        // Función para cambiar el fondo
+        function changeBackground(imageUrl) {
+            const background = document.getElementById('background');
+            background.style.backgroundImage = `url('${imageUrl}')`;
+        }
+
+        // Función para iniciar el fondo dinámico
+        function startBackgroundSlideShow() {
+            const background = document.getElementById('background');
+            if (backgroundImages.length > 0) {
+                setInterval(() => {
+                    // Seleccionar una imagen aleatoria
+                    const randomIndex = Math.floor(Math.random() * backgroundImages.length);
+                    background.style.backgroundImage = `url('${backgroundImages[randomIndex]}')`;
+                }, 15000); // Cambiar cada 15 segundos
+            }
+        }
     </script>
 </body>
 </html>

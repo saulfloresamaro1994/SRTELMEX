@@ -1,1 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emby Content</title>
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: black;
+        }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .buttons button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .movie, .series {
+            flex: 1 1 calc(20% - 10px);
+            text-align: center;
+            box-sizing: border-box;
+            color: white;
+        }
+
+        .movie img, .series img {
+            width: 100%;
+            height: auto;
+            max-width: 150px;
+            max-height: 225px;
+            cursor: pointer;
+        }
+
+        #player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #playerContainer {
+            position: relative;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+        }
+
+        #videoPlayer {
+            width: 100%;
+            max-height: 400px;
+            background: #000;
+            border-radius: 10px;
+        }
+
+        #closePlayer {
+            position: absolute;
+            background: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            top: 10px;
+            right: 10px;
+        }
+
+        .red-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        .seasons-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .season-card {
+            flex: 0 0 auto;
+            text-align: center;
+            color: white;
+        }
+
+        .season-card img {
+            width: 150px;
+            height: 225px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .close-button {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .episodes-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .episode-card {
+            flex: 0 0 auto;
+            text-align: center;
+            color: white;
+        }
+
+        .episode-card img {
+            width: 150px;
+            height: 225px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .movie, .series {
+                flex: 1 1 calc(33.33% - 10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mi Biblioteca Emby</h1>
+        <div class="buttons">
+            <input type="text" id="searchInput" placeholder="Buscar películas o series...">
+            <button id="moviesBtn">Películas</button>
+            <button id="seriesBtn">Series</button>
+        </div>
+        <div id="content"></div>
+    </div>
+
+    <div id="player">
+        <div id="playerContainer">
+            <video id="videoPlayer" controls></video>
+            <button id="closePlayer" onclick="closePlayer()">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    <script>
+        const apiKey = 'efc8a8df6e1c4a50992af3bf3dd71903';
+        const localServerUrl = 'http://192.168.1.65:8096';
+        const remoteServerUrl = 'http://mxcuentas.ddns.net:8096';
+        let serverUrl = localServerUrl;
+
+        let player;
+
+        async function testLocalConnection() {
+            try {
+                const response = await fetch(`${localServerUrl}/System/Info/Public?api_key=${apiKey}`);
+                if (response.ok) {
+                    serverUrl = localServerUrl;
+                } else {
+                    serverUrl = remoteServerUrl;
+                }
+            } catch (error) {
+                serverUrl = remoteServerUrl;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await testLocalConnection();
+            loadMovies();
+        });
+
+        document.getElementById('moviesBtn').addEventListener('click', () => {
+            loadMovies();
+        });
+
+        document.getElementById('seriesBtn').addEventListener('click', () => {
+            loadSeries();
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (event) => {
+            const searchTerm = event.target.value.toLowerCase();
+            filterItems(searchTerm);
+        });
+
+        async function loadMovies() {
+            const cacheKey = 'moviesCache';
+            const cachedData = localStorage.getItem(cacheKey);
+
+            if (cachedData) {
+                const data = JSON.parse(cachedData);
+                displayItems(data.Items, 'movie');
+            } else {
+                const response = await fetch(`${serverUrl}/Items?Recursive=true&IncludeItemTypes=Movie&SortBy=DateCreated&SortOrder=Descending&api_key=${apiKey}`);
+                const data = await response.json();
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                displayItems(data.Items, 'movie');
+            }
+        }
+
+        async function loadSeries() {
+            const cacheKey = 'seriesCache';
+            const cachedData = localStorage.getItem(cacheKey);
+
+            if (cachedData) {
+                const data = JSON.parse(cachedData);
+                displayItems(data.Items, 'series');
+            } else {
+                const response = await fetch(`${serverUrl}/Items?Recursive=true&IncludeItemTypes=Series&SortBy=DateCreated&SortOrder=Descending&api_key=${apiKey}`);
+                const data = await response.json();
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                displayItems(data.Items, 'series');
+            }
+        }
+
+        function displayItems(items, type) {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '';
+
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = type;
+                itemDiv.innerHTML = `
+                    <img src="${serverUrl}/Items/${item.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${item.Name}" loading="lazy">
+                    <p>${item.Name}</p>
+                `;
+
+                if (type === 'movie') {
+                    const button = document.createElement('button');
+                    button.className = 'red-button';
+                    button.innerText = 'Reproductor';
+                    button.addEventListener('click', () => playItem(item.Id));
+                    itemDiv.appendChild(button);
+                } else if (type === 'series') {
+                    const button = document.createElement('button');
+                    button.className = 'red-button';
+                    button.innerText = 'Temporadas';
+                    button.addEventListener('click', () => showSeasons(item.Id));
+                    itemDiv.appendChild(button);
+                }
+
+                contentDiv.appendChild(itemDiv);
+            });
+        }
+
+        function filterItems(searchTerm) {
+            const contentDiv = document.getElementById('content');
+            const items = contentDiv.querySelectorAll('.movie, .series');
+
+            items.forEach(item => {
+                const name = item.querySelector('p').textContent.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        async function showSeasons(seriesId) {
+            const response = await fetch(`${serverUrl}/Shows/${seriesId}/Seasons?api_key=${apiKey}`);
+            const seasons = await response.json();
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '';
+
+            const seasonsContainer = document.createElement('div');
+            seasonsContainer.className = 'seasons-container';
+
+            seasons.Items.forEach(season => {
+                const seasonCard = document.createElement('div');
+                seasonCard.className = 'season-card';
+                seasonCard.innerHTML = `
+                    <img src="${serverUrl}/Items/${season.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${season.Name}" loading="lazy">
+                    <p>${season.Name}</p>
+                `;
+
+                const chaptersButton = document.createElement('button');
+                chaptersButton.className = 'red-button';
+                chaptersButton.innerText = 'Capítulos';
+                chaptersButton.addEventListener('click', () => showEpisodes(seriesId, season.Id));
+                seasonCard.appendChild(chaptersButton);
+
+                seasonsContainer.appendChild(seasonCard);
+            });
+
+            contentDiv.appendChild(seasonsContainer);
+
+            const closeButton = document.createElement('button');
+            closeButton.className = 'close-button';
+            closeButton.innerText = 'Cerrar';
+            closeButton.addEventListener('click', () => loadSeries());
+            contentDiv.appendChild(closeButton);
+        }
+
+        async function showEpisodes(seriesId, seasonId) {
+            const response = await fetch(`${serverUrl}/Shows/${seriesId}/Episodes?SeasonId=${seasonId}&api_key=${apiKey}`);
+            const episodes = await response.json();
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '';
+
+            const episodesContainer = document.createElement('div');
+            episodesContainer.className = 'episodes-container';
+
+            episodes.Items.forEach(episode => {
+                const episodeCard = document.createElement('div');
+                episodeCard.className = 'episode-card';
+                episodeCard.innerHTML = `
+                    <img src="${serverUrl}/Items/${episode.Id}/Images/Primary?maxHeight=300&maxWidth=200&quality=90&api_key=${apiKey}" alt="${episode.Name}" loading="lazy">
+                    <p>${episode.Name}</p>
+                    <button class="red-button" onclick="playItem('${episode.Id}')">Reproducir</button>
+                `;
+
+                episodesContainer.appendChild(episodeCard);
+            });
+
+            contentDiv.appendChild(episodesContainer);
+
+            const backButton = document.createElement('button');
+            backButton.className = 'close-button';
+            backButton.innerText = 'Regresar a Temporadas';
+            backButton.addEventListener('click', () => showSeasons(seriesId));
+            contentDiv.appendChild(backButton);
+        }
+
+        function playItem(itemId) {
+            const videoUrl = `${serverUrl}/Items/${itemId}/Download?api_key=${apiKey}`;
+
+            if (!player) {
+                player = new Plyr('#videoPlayer', {
+                    controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+                    autoplay: true,
+                    buffered: true,
+                    quality: { default: 720, options: [1080, 720, 480] },
+                });
+            }
+
+            const videoElement = document.getElementById('videoPlayer');
+            videoElement.src = videoUrl;
+
+            document.getElementById('player').style.display = 'flex';
+        }
+
+        function closePlayer() {
+            if (player) {
+                player.pause();
+                player.source = null;
+            }
+            document.getElementById('player').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
 
